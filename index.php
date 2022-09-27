@@ -1,6 +1,12 @@
 <?php 
 session_start();
 $time_start = microtime(true);
+if (empty($_SESSION['timezone'])) {
+	date_default_timezone_set('Europe/Moscow');
+} else {
+	date_default_timezone_set($_SESSION['timezone']);
+}
+
 
 function filter(string $str) {
 	return trim(stripslashes(htmlspecialchars($str)));
@@ -47,9 +53,9 @@ function calc(float $r, float $x, float $y) {
 
 function write_results(string $message, float $time_start, $cords) {
 	if (empty($_SESSION['results_arr'])) {
-		$_SESSION['results_arr'] = [[$message, microtime(true) - $time_start, $cords]];
+		$_SESSION['results_arr'] = [[$message, microtime(true) - $time_start, $cords, date("H:i:s")]];
 	} else {
-		array_unshift($_SESSION['results_arr'], [$message, microtime(true) - $time_start, $cords]);
+		array_unshift($_SESSION['results_arr'], [$message, microtime(true) - $time_start, $cords, date("H:i:s")]);
 	}
 }
 
@@ -338,7 +344,8 @@ fieldset input:checked {
 	font-size: 18px;
 	font-weight: 300;
 }
-.response td:last-child {
+.response td:last-child,
+.response.triple-column td.per-last {
 	border-right: none;
 }
 .response.single-column td {
@@ -349,6 +356,10 @@ fieldset input:checked {
 }
 .response.triple-column td {
 	width: 32%;
+}
+.response.triple-column td.last {
+	width: 100%;
+	border-top: 1px solid #EEE;
 }
 .response.neutral {
 	background-color: #CCC;
@@ -378,7 +389,7 @@ fieldset input:checked {
 						echo('x="0" y="0" r="0"');
 					} else {
 						$result = $results_arr[0];
-						if (count($result) != 3) {
+						if (count($result) != 4) {
 							echo('x="0" y="0" r="0"');
 						} else {
 							$cords = $result[2];
@@ -429,7 +440,6 @@ fieldset input:checked {
 							<tr class="response neutral single-column"><td colspan="3">Пока здесь пусто</td></tr>
 							<?php else: ?>
 							<?php foreach ($_SESSION['results_arr'] as $num_result => $result): ?>
-								<?php if ($num_result === 0): ?>
 									<?php if ($result[0] === 'точка попала'): ?>
 										<tr id="last-response" class="response success triple-column">
 											<td>Последний ответ - точка попала</td>
@@ -437,20 +447,10 @@ fieldset input:checked {
 										<tr class="response fail triple-column">
 											<td>Последний ответ - точка не попала</td>
 									<?php endif; ?>
-											<td>Время работы скрипта <?php echo(number_format($result[1], 9, '.', '')); ?>ms</td>
-											<td>Текущее время <?php echo(date("H:i:s")); ?></td>
+											<td>Время работы скрипта <?php echo(number_format($result[1], 9, '.', '')) *1000; ?>ms</td>
+											<td class=per-last>Текущее время <?php echo($result[3]); ?></td>
+											<td class="last">Аргументы: <?php echo('x: ' . $result[2][0] . '; y:' . $result[2][1] . '; r: ' . $result[2][2]); ?></td>
 										</tr>
-								<?php else: ?>
-									<?php if ($result[0] === 'точка попала'): ?>
-										<tr class="response success double-column">
-											<td>Точка попала</td>
-									<?php else: ?>
-										<tr class="response fail double-column">
-											<td>Точка не попала</td>
-									<?php endif; ?>
-											<td colspan="2">Время работы скрипта <?php echo(number_format($result[1], 10, '.', '')); ?>ms</td>
-										</tr>
-								<?php endif; ?>
 							<?php endforeach; ?>
 							<?php endif; ?>
 						</tbody>
@@ -518,7 +518,7 @@ function filterForm(fieldX, fieldY, fieldR, formError) {
 		return false;
 	}
 
-	let regex = '^[-+]?[0-9]*(?:[.,][0-9]+)*$';
+	let regex = '^[-+]?[0-9]{0,9}(?:[.,][0-9]{1,9})*$';
 	let resultX = valueX.match(regex);
 	let resultY = valueY.match(regex);
 	let resultR = valueR.match(regex);
