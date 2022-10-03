@@ -442,10 +442,10 @@ fieldset input:checked {
 							<?php foreach ($_SESSION['results_arr'] as $num_result => $result): ?>
 									<?php if ($result[0] === 'точка попала'): ?>
 										<tr id="last-response" class="response success triple-column">
-											<td>Последний ответ - точка попала</td>
+											<td><?php if ($num_result == 0) {echo('Последний ответ - ');} ?>точка попала</td>
 									<?php else: ?>
 										<tr class="response fail triple-column">
-											<td>Последний ответ - точка не попала</td>
+											<td><?php if ($num_result == 0) {echo('Последний ответ - ');} ?>точка не попала</td>
 									<?php endif; ?>
 											<td>Время работы скрипта <?php echo(number_format($result[1], 9, '.', '')) *1000; ?>ms</td>
 											<td class=per-last>Текущее время <?php echo($result[3]); ?></td>
